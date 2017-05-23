@@ -19,6 +19,8 @@ var client = require("ibmiotf");
 var cfenv = require('cfenv');
 var passport = require('passport');
 var Strategy = require('passport-twitter').Strategy;
+var fs = require('fs');
+var Twitter = require('twitter');
 
 var GameFile = require("./objects/gameFile");
 var User = require("./objects/user");
@@ -42,11 +44,12 @@ var auth_token = "";  //This is the API Auth Token generated in the Watson IoT P
 
 var twitterKey = "";  //This is the API Key from Twitter when you register an app
 var twitterSecret = "";  //This is the API secret token from Twitter when you register an app
+var twitterAccessKey = "" //Access token key from Twitter
+var twitterAccessSecret = "" //Access token secret from Twitter
 
 var location = "";  //Where will the foosball table be located? This is just for record keeping purposes with the leaderboard
-//example:
-//var location = "Austin, Texas";
 
+var debugging = false; //When set to true, app will not send out tweets. Set to true if you are just testing app or debugging
 //------------------------------------------------------------------------------
 //3. Declaration of necessary variables                             ---------------
 //------------------------------------------------------------------------------
@@ -129,6 +132,14 @@ appClient.on("deviceEvent", function (deviceType, deviceId, eventType, format, p
 				player2.losses++;
 				oldPlayer1=player1;
 				oldPlayer2=player2;
+
+				if(!debugging) {
+					twitterClient.post('statuses/update', {status: '@'+player1.handle+" has won the game. Better luck next time @"+player2.handle+"."}, function(error, tweet, response) {
+					  if (!error) {
+					    console.log(tweet);
+					  }
+					});
+				}
 				endGame(gf);
 			}
 
@@ -151,6 +162,14 @@ appClient.on("deviceEvent", function (deviceType, deviceId, eventType, format, p
 				player1.losses++;
 				oldPlayer1=player1;
 				oldPlayer2=player2;
+
+        if(!debugging) {
+  				twitterClient.post('statuses/update', {status: '@'+player2.handle+" has won the game. Better luck next time @"+player1.handle+"."}, function(error, tweet, response) {
+  				  if (!error) {
+  				    console.log(tweet);
+  				  }
+  				});
+        }
 				endGame(gf);
 			}
 
@@ -170,6 +189,13 @@ appClient.on("error", function(error) {
 //------------------------------------------------------------------------------
 //5. Twitter authentication handling                                ---------------
 //------------------------------------------------------------------------------
+
+var twitterClient = new Twitter({
+  consumer_key: twitterKey,
+  consumer_secret: twitterSecret,
+  access_token_key: twitterAccessKey,
+  access_token_secret: twitterAccessSecret
+});
 
 //Configues the authentication with Twitter
 passport.use(new Strategy({
@@ -371,6 +397,9 @@ function twitterLogin(data) {
 			gf.IDTeam1 = loginHandle;
 			game.loggedIn.player1 = true;
 			io.emit("login", {player: player1, team: 1});
+			db.storeUser(player1, function() {
+				console.log("Player 1 Stored");
+			});
 
 		}
 
@@ -386,7 +415,22 @@ function twitterLogin(data) {
 
 			game.loggedIn.player2 = true;
 			io.emit("login", {player: player2, team: 2});
+			db.storeUser(player2, function() {
+				console.log("Player 2 stored");
+			});
 
+		}
+
+		if((game.loggedIn.player1 == true || game.loggedIn.player2 == true) && gf.gameActive == true) {
+
+      if(!debugging) {
+  			twitterClient.post('statuses/update', {status: 'A game has started between @'+player1.handle+" and @"+player2.handle}, function(error, tweet, response) {
+
+  			  if (!error) {
+  			    console.log(tweet);
+  			  }
+  			});
+      }
 		}
 
 	}

@@ -13,7 +13,9 @@
 		"passport": "0.3.2",
 		"passport-twitter": "1.0.4",
 		"express-session": "1.15.1",
-		"cloudant": "1.7.1"
+		"cloudant": "1.7.1",
+		"watson-developer-cloud": "2.26.0",
+		"twitter": "1.7.0"
 	},
 	"repository": {},
 	"engines": {
