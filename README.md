@@ -4,7 +4,7 @@
 
 There are a few things that need to be done to get the app running
 <ol>
-  <li>Deploy the application
+<li>Deploy the application by clicking [<strong>HERE</strong>](https://bluemix.net/deploy?repository=https://github.com/odrodrig/IoT_Foosball.git)
   <li>Set up the raspberry pi with the python application found [here](https://github.com/odrodrig/foosbuzzTable)
   <li>Get an API auth token and key from the Watson IoT Platform
   <li>Add the Watson IoT credentials to the app.js file
